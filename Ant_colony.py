@@ -105,8 +105,10 @@ def route_finder(T):
     return route
         
 
-num_ants = 3
+def cost_function(D, F):
+    return None
 
+num_ants = 3
 alpha = 1
 beta  = 2
 random.seed(0)
