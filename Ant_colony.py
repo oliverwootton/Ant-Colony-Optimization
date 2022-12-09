@@ -104,8 +104,8 @@ def route_finder(T):
         route.append(max[1]+1)
     return route
         
-
 def cost_function(D, F):
+    
     return None
 
 num_ants = 3

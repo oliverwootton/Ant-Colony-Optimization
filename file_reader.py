@@ -1,6 +1,4 @@
-
 def file_read(filename):
-  
     with open(filename) as f:
         n = int(f.readline()) # read first line
         D = []
@@ -15,5 +13,4 @@ def file_read(filename):
             else:
                 F.append([int(x) for x in line.split()])
             x += 1
-
     return(n, D, F)
