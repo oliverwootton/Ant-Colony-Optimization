@@ -3,9 +3,9 @@ import random
 
 from file_reader import file_read
 
-def heuristic(num_cities, D):
-    H = [[ round(1/D[i][j],4) if (i != j and D[i][j] !=0) else 0 for j in range(50)] for i in range(50)]
-    return H
+# def heuristic(num_cities, D):
+#     H = [[ round(1/D[i][j],4) if (i != j and D[i][j] !=0) else 0 for j in range(50)] for i in range(50)]
+#     return H
 
 def pheromone(num_cities):
     T = [[ 1 for j in range(num_cities)] for i in range(num_cities)]
@@ -28,7 +28,10 @@ def transition_prob(alpha, beta, i, num_cities, T, H):
         den += N[j]
     
     for j in range(num_cities):
-        N[j] = N[j]/den
+        if den > 0:
+            N[j] = N[j]/den
+        else:
+            N[j] = 0
     return N
     
 def cumulative_prop(num_cities, N):
@@ -48,6 +51,7 @@ def iteration(H, D, num_cities, alpha, beta, T):
     for i in range(num_cities-1):
         H = set_zeros(routes, num_cities, H, D)
         N = transition_prob(alpha, beta, routes[-1], num_cities, T, H)
+        print(cumulative_prop(num_cities, N))
         city_number = cumulative_prop(num_cities, N)
         routes.append(city_number-1)
     routes.append(0)
@@ -65,13 +69,14 @@ def ant_pheromone(ant, delta, T, num_cities):
     return T
 
 def ant_colony(D, num_cities, num_ants, alpha, beta):
-    H = heuristic(num_cities, D)
+    # H = heuristic(num_cities, D)
+    H = D
     T = pheromone(num_cities)
     
     ants = []
     for i in range(num_ants):
         routes = iteration(H, D, num_cities, alpha, beta, T)
-        H = heuristic(num_cities, D)
+        H = D
         ants.append(routes)
     
     rho = 0.5
