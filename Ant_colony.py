@@ -1,5 +1,6 @@
 import numpy as np
 import random
+import matplotlib.pyplot as plt
 
 from file_reader import file_read
 
@@ -10,28 +11,29 @@ def cost_function(D, F):
 
 # Function to initialise the Pheromone Matrix with random values
 def pheromone(n):
-    T = [[ random.random() if (i != j) else 0  for j in range(n)] for i in range(n)]
-    return T
+    return [[ random.random() if (i != j) else 0  for j in range(n)] for i in range(n)]
 
 # Function to set one column of a Matrix H to 0
 def set_zeros(column, n, H):
     for i in range(n):
-        for j in range(n):
-            if (i != j) and (j in column):
-                H[i][j] = 0
+        H[i][column] = 0
     return H
 
 # Function to caculate the transition probabilities of 
 # the next node to traverse to
 def transition_prob(i, n, T, route):
+    # Denominator
     den = 0 
     N = [None] * n
+    
+    # Loop sets N values and adds each value to den
     for j in range(n):
         if (i != j) and (j not in route):
             N[j] = T[i][j]
             den += N[j]
         else:
             N[j] = 0 
+    # Loop converts values in N to probabilities
     for j in range(n):
         if den > 0 and N[j] != 0:
             N[j] = N[j]/den
@@ -41,19 +43,19 @@ def transition_prob(i, n, T, route):
 
 # Function to randomly select the next node to visit using 
 # the probabilities provided by N
-def cumulative_prop(num_cities, N):
+def cumulative_prop(n, N):
     CP = 0
     ran = random.random()
-    
-    for i in range(num_cities):
+    for i in range(n):
         CP += N[i]
         if CP > ran:
-            return i+1
+            return i
 
 # Function to calculate the fitness of each path 
 # taken by the ants
 def fitness(routes, H, m):
     fitness = []
+    # Finds the value at each point that the ant traversed
     for i in range(m):
         x = 0
         delta = 0
@@ -75,10 +77,11 @@ def ant_pheromone(ant, delta, T, n):
 # Function to evaporate the pheromone by e for each #
 # value in the matrix
 def evaportation(rho, T, n):
-    for i in range(n):
-        for j in range(n):
-            T[i][j] = (rho)*T[i][j]
-    return T
+    # for i in range(n):
+    #     for j in range(n):
+    #         T[i][j] = (rho)*T[i][j]
+    # return T
+    return [[(rho)*T[i][j] for j in range(n)] for i in range(n)]
 
 # Function to find the lowest value in and array of values
 def best_fitness(delta):
@@ -90,34 +93,40 @@ def best_fitness(delta):
 
 # Function to find the route that one ant takes
 def one_ant(n, H, T):
-    buildingNo = 0
+    # Start Node
+    node = 0
     route = []
-    route.append(buildingNo)
-    
-    for i in range(n-1):
-        H = set_zeros(route, n, H)
+    route.append(node)
+    # Loop finds the path from the start node through each other node
+    for _ in range(n-1):
+        H = set_zeros(route[-1], n, H)
         # Calculates the probability of moving to the next building
         N = transition_prob(route[-1], n, T, route)
         # Randomly goes to the next building
-        buildingNo = cumulative_prop(n, N)
-        route.append(buildingNo-1)
+        node = cumulative_prop(n, N)
+        route.append(node)
+    # Adds the start node to the end to return to the first building
     route.append(0)
     return route  
 
 # Function to run 1 trail of 10,000 fitness evaluations
 def main(n, D, F, m, rho):
     fitness_eval = 10000
+    # Initialise the pheromone matrix
     T = pheromone(n)
+    # List to keep track of all the fitness scores of each path
     minimum_fitness = []
-    for i in range((int) (fitness_eval/m)):
+    for _ in range((int) (fitness_eval/m)):
+        # List of paths taken by the ants
         ant_paths = []
         
+        # Generates a list of m ant paths
         for j in range(m):
-            # Generates a list of m ant paths
             H = cost_function(D, F)
             ant_paths.append(one_ant(n, H, T))
         
         H = cost_function(D, F)
+        # Finds the fitness of each path taken 
         delta = fitness(ant_paths, H, m) 
         
         j = 0
@@ -129,19 +138,59 @@ def main(n, D, F, m, rho):
         
         minimum_fitness.append(best_fitness(delta))
     return best_fitness(minimum_fitness)
-        
+
+def plotGraph(y, y1):
+    x = [1, 2, 3, 4, 5]
+    if y == 0:
+        plt.plot(x, y1, marker = 'o', label = "m = 100, e = 0.9")
+    if y == 1:
+        plt.plot(x, y1, marker = 'o', label = "m = 100, e = 0.5")
+    if y == 2:
+        plt.plot(x, y1, marker = 'o', label = "m = 10, e = 0.9")
+    if y == 3:
+        plt.plot(x, y1, marker = 'o', label = "m = 10, e = 0.5")
+   
+def run(m, e):
+    trial_fitness = []
+    for _ in range(5):
+        trial_fitness.append(main(n, D, F, m, e))
+    return trial_fitness
+
+def run_trials():
+    m = 100
+    e = 0.9
+    trials = []
+    
+    trials.append(run(m, e))
+    e = 0.5
+    trials.append(run(m, e))
+    m = 10
+    e = 0.9
+    trials.append(run(m, e))
+    e = 0.5
+    trials.append(run(m, e))
+    
+    for x in trials:
+        print(x)
+        z = 0
+        for y in x:
+            z += y
+        print(z/5)
+    
+    for i in range(len(trials)):
+        plotGraph(i, trials[i])
+    
+    plt.title("Experiment Results")
+    plt.xlabel("Trial Number")
+    plt.ylabel("Average Fitness Score")
+    plt.legend(loc="upper right")
+    plt.show()
+
 random.seed(0)
-m = 10
-e = 0.9
-
-n, D, F = file_read('data.txt')
-
-trial_fitness = []
-
-for i in range(5):
-    trial_fitness.append(main(n, D, F, m, e))
-
-print(trial_fitness)
+n, D, F = file_read('Uni50a.dat')
+run_trials()
 
 # m = 100, e = 0.9 [74302, 68609, 68557, 68344, 63906]
-# m = 100, e = 0.5 [57167, 52777, 53563, 56038, 54639]
+# m = 100, e = 0.5 [59461, 57690, 55923, 57921, 54606]
+# m = 10, e = 0.9 [58205, 52615, 60970, 55089, 57761]
+# m = 10, e = 0.5 [54668, 49982, 66303, 61059, 66329]
