@@ -91,7 +91,7 @@ def one_ant(n, H, T):
 def main(n, D, F, m, rho):
     fitness_eval = 10000
     T = pheromone(n)
-    fitness = []
+    minimum_fitness = []
     for i in range((int) (fitness_eval/m)):
         ant_paths = []
         
@@ -110,9 +110,9 @@ def main(n, D, F, m, rho):
         
         T = evaportation(rho, T, n)
         
-        fitness.append(delta)
-    print(best_fitness(fitness))
-
+        minimum_fitness.append(best_fitness(delta))
+    print(minimum_fitness)
+        
 random.seed(0)
 m = 100
 e = 0.9
@@ -120,3 +120,8 @@ e = 0.9
 n, D, F = file_read('data.txt')
 
 main(n, D, F, m, e)
+
+# for i in range(1):
+#     T = ant_colony(D, F, n, num_ants, alpha, beta)
+#     # print('\n'.join([''.join(['{:20}'.format(item) for item in row]) for row in T]))
+#     print(route_finder(T))
