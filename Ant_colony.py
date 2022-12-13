@@ -14,18 +14,18 @@ def pheromone(num_cities):
 def set_zeros(column, num_cities, H):
     for i in range(num_cities):
         for j in range(num_cities):
-            if (i == j) and (j in column):
+            if (i != j) and (j in column):
                 H[i][j] = 0
     return H
 
-def transition_prob(alpha, beta, i, num_cities, T, H):
+def transition_prob(i, n, T, H):
     den = 0 
-    N = [None] * num_cities
-    for j in range(num_cities):
-        N[j] = T[i][j] ** alpha * H[i][j] ** beta
+    N = [None] * n
+    for j in range(n):
+        N[j] = T[i][j] * H[i][j]
         den += N[j]
     
-    for j in range(num_cities):
+    for j in range(n):
         if den > 0:
             N[j] = N[j]/den
         else:
@@ -41,6 +41,7 @@ def cumulative_prop(num_cities, N):
         if CP > ran:
             # print(f"City number --> {i+1}")
             return i+1
+
 
 def iteration(H, num_cities, alpha, beta, T):
     city_number = 1
@@ -60,8 +61,8 @@ def evaportation(rho, T, num_cities):
             T[i][j] = (rho)*T[i][j]
     return T
             
-def ant_pheromone(ant, delta, T, num_cities):
-    for i in range(num_cities):
+def ant_pheromone(ant, delta, T, n):
+    for i in range(n):
         T[ant[i]][ant[i+1]] += delta
     return T
 
@@ -79,17 +80,11 @@ def ant_colony(D, F, num_cities, num_ants, alpha, beta):
     rho = 0.5
     T = evaportation(rho, T, num_cities)
     
-    for i in range(num_ants):
-        x = ants[i][0]
-        delta = 0
-        for y in ants[i]:
-            if x == y:
-                continue
-            delta += D[x][y]
-            x = y
-        
-        delta = 1/delta
-        T = ant_pheromone(ants[i], delta, T, num_cities)
+    H = cost_function(D, F)
+    delta = fitness(routes, H)
+    delta = 1/delta
+    
+    T = ant_pheromone(ants[i], delta, T, num_cities)
     return T
 
 def route_finder(T):
@@ -109,43 +104,64 @@ def route_finder(T):
 def cost_function(D, F):
     return [[ D[i][j] * F[i][j] for j in range(50)] for i in range(50)]
 
-def fitness(route, H):
-    x = route[0]
-    delta = 0
-    for y in route:
-        if x == y:
-            continue
-        delta += H[x][y]
-        x = y
-    return delta
+def fitness(routes, H, m):
+    fitness = []
+    for i in range(m):
+        x = 0
+        delta = 0
+        for y in routes[i]:
+            if x == y:
+                continue
+            delta += H[x][y]
+            x = y
+        fitness.append(1/delta)
+    return fitness
 
-def ant(n):
+def one_ant(n, H, T):
     buildingNo = 0
-    routes = []
-    routes.append(buildingNo)
+    route = []
+    route.append(buildingNo)
     
     for i in range(n-1):
-        H = set_zeros(routes, n, H)
-        N = transition_prob(alpha, beta, routes[-1], n, T, H)
+        H = set_zeros(route, n, H)
+        # Calculates the probability of moving to the next building
+        N = transition_prob(route[-1], n, T, H)
+        # Randomly goes to the next building
         buildingNo = cumulative_prop(n, N)
-        routes.append(buildingNo-1)
-    routes.append(0)
+        route.append(buildingNo-1)
+    route.append(0)
+    return route
     
 
-def main(n):
+def main(n, D, F, m):
     T = pheromone(n)
+    ant_paths = []
+    # Generates a list of m ant paths 
+    for i in range(m):
+        H = cost_function(D, F)
+        ant_paths.append(one_ant(n, H, T))
+    
+    H = cost_function(D, F)
+    delta = fitness(ant_paths, H, m)
+    
+    i = 0
+    for route in ant_paths:
+        T = ant_pheromone(route, delta[i], T, n)
+        i += 1
+    
     
     
     
 
-num_ants = 3
+num_ants = 2
 alpha = 1
 beta  = 2
 random.seed(0)
+m = 100
 
 n, D, F = file_read('data.txt')
 
-main(n)
+main(n, D, F, m)
 
 # for i in range(1):
 #     T = ant_colony(D, F, n, num_ants, alpha, beta)
