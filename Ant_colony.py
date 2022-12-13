@@ -139,6 +139,7 @@ def main(n, D, F, m, rho):
         minimum_fitness.append(best_fitness(delta))
     return best_fitness(minimum_fitness)
 
+# Function to plot a graph of the average fitness of each trial
 def plotGraph(y, y1):
     x = [1, 2, 3, 4, 5]
     if y == 0:
@@ -149,13 +150,16 @@ def plotGraph(y, y1):
         plt.plot(x, y1, marker = 'o', label = "m = 10, e = 0.9")
     if y == 3:
         plt.plot(x, y1, marker = 'o', label = "m = 10, e = 0.5")
-   
+
+# Function runs 5 trial for one experiment
 def run(m, e):
     trial_fitness = []
     for _ in range(5):
         trial_fitness.append(main(n, D, F, m, e))
     return trial_fitness
 
+# Function sets the parameters for each trial and displace 
+# the formatted graph with results
 def run_trials():
     m = 100
     e = 0.9
