@@ -3,10 +3,17 @@ import random
 
 from file_reader import file_read
 
+# Function to multiply each value in D with its 
+# counter part in F    
+def cost_function(D, F):
+    return [[ D[i][j] * F[i][j] for j in range(50)] for i in range(50)]
+
+# Function to initialise the Pheromone Matrix with random values
 def pheromone(n):
     T = [[ random.random() if (i != j) else 0  for j in range(n)] for i in range(n)]
     return T
 
+# Function to set one column of a Matrix H to 0
 def set_zeros(column, n, H):
     for i in range(n):
         for j in range(n):
@@ -14,6 +21,8 @@ def set_zeros(column, n, H):
                 H[i][j] = 0
     return H
 
+# Function to caculate the transition probabilities of 
+# the next node to traverse to
 def transition_prob(i, n, T, route):
     den = 0 
     N = [None] * n
@@ -30,6 +39,8 @@ def transition_prob(i, n, T, route):
             N[j] = 0
     return N
 
+# Function to randomly select the next node to visit using 
+# the probabilities provided by N
 def cumulative_prop(num_cities, N):
     CP = 0
     ran = random.random()
@@ -39,20 +50,8 @@ def cumulative_prop(num_cities, N):
         if CP > ran:
             return i+1
 
-def evaportation(rho, T, n):
-    for i in range(n):
-        for j in range(n):
-            T[i][j] = (rho)*T[i][j]
-    return T
-            
-def ant_pheromone(ant, delta, T, n):
-    for i in range(n):
-        T[ant[i]][ant[i+1]] += delta
-    return T
-        
-def cost_function(D, F):
-    return [[ D[i][j] * F[i][j] for j in range(50)] for i in range(50)]
-
+# Function to calculate the fitness of each path 
+# taken by the ants
 def fitness(routes, H, m):
     fitness = []
     for i in range(m):
@@ -66,13 +65,30 @@ def fitness(routes, H, m):
         fitness.append(delta)
     return fitness
 
+# Function to add pheromone to the pheromone matrix
+# for each path traversed by the ants
+def ant_pheromone(ant, delta, T, n):
+    for i in range(n):
+        T[ant[i]][ant[i+1]] += delta
+    return T
+
+# Function to evaporate the pheromone by e for each #
+# value in the matrix
+def evaportation(rho, T, n):
+    for i in range(n):
+        for j in range(n):
+            T[i][j] = (rho)*T[i][j]
+    return T
+
+# Function to find the lowest value in and array of values
 def best_fitness(delta):
     min = delta[0]
     for fitness in delta:
         if fitness < min:
             min = fitness
     return min
-  
+
+# Function to find the route that one ant takes
 def one_ant(n, H, T):
     buildingNo = 0
     route = []
@@ -88,6 +104,7 @@ def one_ant(n, H, T):
     route.append(0)
     return route  
 
+# Function to run 1 trail of 10,000 fitness evaluations
 def main(n, D, F, m, rho):
     fitness_eval = 10000
     T = pheromone(n)
@@ -111,17 +128,20 @@ def main(n, D, F, m, rho):
         T = evaportation(rho, T, n)
         
         minimum_fitness.append(best_fitness(delta))
-    print(minimum_fitness)
+    return best_fitness(minimum_fitness)
         
 random.seed(0)
-m = 100
+m = 10
 e = 0.9
 
 n, D, F = file_read('data.txt')
 
-main(n, D, F, m, e)
+trial_fitness = []
 
-# for i in range(1):
-#     T = ant_colony(D, F, n, num_ants, alpha, beta)
-#     # print('\n'.join([''.join(['{:20}'.format(item) for item in row]) for row in T]))
-#     print(route_finder(T))
+for i in range(5):
+    trial_fitness.append(main(n, D, F, m, e))
+
+print(trial_fitness)
+
+# m = 100, e = 0.9 [74302, 68609, 68557, 68344, 63906]
+# m = 100, e = 0.5 [57167, 52777, 53563, 56038, 54639]
